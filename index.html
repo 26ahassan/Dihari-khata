@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="ur-Latn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dihari Khata</title>
+<meta name="theme-color" content="#18202e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dihari Khata">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: dark week card on top (week + totals), sticky pill tabs, a tile grid with the day column pinned, a slim bottom bar with total + statement. */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --sunk:#f5f7fa; --ink:#18202e; --muted:#667085; --line:#dde2ea;
+  --hero:#18202e; --hero-ink:#f3f5f9; --hero-muted:#a3adbf;
+  --mi:#3550c8; --mi-soft:#e6eafb; --mz:#13845a; --mz-soft:#def3ea;
+  --half:#f2902a; --half-soft:#fdecd8; --half-ink:#6b3a05;
+  --ok:#13845a; --danger:#c62f22;
+  --display:"Outfit","Trebuchet MS",system-ui,sans-serif;
+  --body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141c; --surface:#171e2a; --sunk:#131925; --ink:#e9edf4; --muted:#93a0b4; --line:#273142;
+  --hero:#1d2636; --hero-ink:#f3f5f9; --hero-muted:#93a0b4;
+  --mi:#7d93ff; --mi-soft:#222c4f; --mz:#3fc98f; --mz-soft:#173a2d;
+  --half:#f6a54b; --half-soft:#3d2a14; --half-ink:#2a1500; --ok:#3fc98f; --danger:#ff8a7d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141c; --surface:#171e2a; --sunk:#131925; --ink:#e9edf4; --muted:#93a0b4; --line:#273142;
+  --hero:#1d2636; --hero-ink:#f3f5f9; --hero-muted:#93a0b4;
+  --mi:#7d93ff; --mi-soft:#222c4f; --mz:#3fc98f; --mz-soft:#173a2d;
+  --half:#f6a54b; --half-soft:#3d2a14; --half-ink:#2a1500; --ok:#3fc98f; --danger:#ff8a7d; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;padding:12px 16px calc(92px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent,var(--mi));outline-offset:2px}
+.mi{--accent:var(--mi);--soft:var(--mi-soft)} .mz{--accent:var(--mz);--soft:var(--mz-soft)} .kul{--accent:var(--ink);--soft:var(--sunk)}
+
+/* week card */
+.hero{background:var(--hero);color:var(--hero-ink);border-radius:20px;padding:16px;display:grid;gap:14px}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-family:var(--display);font-weight:800;font-size:24px;margin:0;line-height:1;letter-spacing:-.01em}
+h1 span{color:var(--half)}
+.chip{font-size:12px;padding:4px 10px;border-radius:99px;background:rgb(255 255 255 / .08);color:var(--hero-muted);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--hero-muted)}
+.chip.live{color:#c7f5df}.chip.live::before{background:#3fc98f;box-shadow:0 0 0 3px rgb(63 201 143 / .25)}
+.weeknav{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;gap:6px}
+.weeknav button{height:40px;border:0;background:rgb(255 255 255 / .08);color:var(--hero-ink);border-radius:12px;font-size:22px;line-height:1}
+#wlabel{text-align:center;font-family:var(--display);font-weight:600;font-size:17px}
+#wlabel small{display:block;font-family:var(--body);font-size:12px;color:var(--hero-muted);font-weight:400}
+#wlabel button{border:0;background:none;color:var(--half);font-size:12px;font-weight:700;padding:2px 0;text-decoration:underline}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fig.big{grid-column:1/-1;display:flex;justify-content:space-between;align-items:baseline}
+.fig{background:rgb(255 255 255 / .06);border-radius:12px;padding:10px 12px;min-width:0}
+.fig small{display:block;font-size:12px;color:var(--hero-muted)}
+.fig b{display:block;font-family:var(--display);font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fig.big b{font-size:26px;color:var(--half)}
+.fig i{font-style:normal;display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;margin:12px -16px 0;padding:8px 16px;background:var(--bg)}
+.tabs div{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px}
+.tabs button{border:0;background:none;border-radius:99px;padding:9px 4px;font-family:var(--display);font-weight:600;font-size:15px;color:var(--muted);transition:background .15s,color .15s}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--surface)}
+.kul.tabsel[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+
+main{display:grid;gap:14px;padding-block:8px}
+.ro{background:var(--sunk);border:1px dashed var(--line);border-radius:var(--r);padding:10px 14px;font-size:14px;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+h2{font-family:var(--display);font-weight:700;font-size:18px;margin:0}
+
+.ratebox{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px}
+.ratebox label{font-weight:700;display:block}
+.ratebox .hint{margin:2px 0 0;font-size:13px;color:var(--muted)}
+.rate{display:flex;align-items:center;gap:6px;border-radius:12px;padding:6px 12px;background:var(--soft)}
+.rate span{color:var(--accent);font-weight:700}
+.rate input{width:6ch;border:0;background:none;font-family:var(--display);font-size:24px;font-weight:700;color:var(--accent);text-align:right;padding:0;outline:none}
+
+/* grid */
+.gridcard{padding:12px 0 6px;overflow:hidden}
+.gridhead{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:0 14px 10px}
+.legend{display:flex;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.sw.f{background:var(--accent)}
+.sw.h{border:1.5px solid var(--half);background:linear-gradient(to top,var(--half) 50%,transparent 50%)}
+.sw.e{border:1.5px dashed var(--line)}
+.tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.grid{border-collapse:separate;border-spacing:0;min-width:100%}
+.grid th,.grid td{padding:5px 4px;text-align:center;vertical-align:middle}
+.grid .daycol{position:sticky;left:0;z-index:2;background:var(--surface);text-align:left;padding:5px 10px 5px 14px;min-width:70px}
+.grid tbody .daycol b{display:block;font-family:var(--display);font-size:16px;font-weight:600}
+.grid tbody .daycol small{color:var(--muted);font-size:12px}
+.grid tbody tr.today .daycol b{color:var(--accent)}
+.grid tbody tr.today .daycol small::after{content:" · aaj";color:var(--accent);font-weight:700}
+.grid thead th{padding-bottom:8px}
+.nm{border:0;background:none;padding:0;display:grid;justify-items:center;gap:4px;width:64px}
+.av{font-style:normal;width:36px;height:36px;border-radius:50%;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:14px}
+.nm span{font-size:12px;font-weight:600;line-height:1.15;max-width:64px;overflow-wrap:anywhere;color:var(--ink)}
+.cw{display:grid;gap:5px;justify-items:center}
+.cell{position:relative;width:56px;height:46px;border-radius:12px;border:1.5px dashed var(--line);background:var(--sunk);color:var(--muted);font-family:var(--display);font-weight:700;font-size:17px;overflow:hidden;transition:transform .08s}
+.cell:active{transform:scale(.94)}
+.cell.f{background:var(--accent);border:1.5px solid var(--accent);color:var(--surface)}
+.cell.h{border:1.5px solid var(--half);background:linear-gradient(to top,var(--half) 50%,var(--half-soft) 50%);color:var(--half-ink)}
+.half{width:44px;height:22px;border-radius:99px;border:1px solid var(--line);background:var(--surface);font-size:12px;color:var(--muted);line-height:1;font-weight:700}
+.half.on{background:var(--half);border-color:var(--half);color:var(--half-ink)}
+.grid tfoot td{border-top:1px solid var(--line);padding-top:8px;font-size:13px}
+.grid tfoot .daycol{font-weight:600;color:var(--muted);font-size:12px}
+.grid tfoot b{font-family:var(--display);font-size:15px;font-weight:700}
+.grid tfoot tr+tr td{border-top:0;padding-top:2px}
+.grid tfoot tr+tr b{color:var(--accent)}
+button:disabled{cursor:default}
+
+.morebar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px}
+.morebar b{font-weight:700}
+.morebar small{display:block;color:var(--muted);font-size:13px}
+.switch{position:relative;width:50px;height:30px;flex:none}
+.switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgb(0 0 0 / .3);transition:transform .15s}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.add{border:1.5px dashed var(--accent);color:var(--accent);background:var(--soft);border-radius:var(--r);padding:13px;font-weight:700;font-family:var(--display);font-size:16px}
+
+/* daily list */
+.daily{padding:14px}
+.daily h2{margin-bottom:8px}
+.dr{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.dr:first-of-type{border-top:0}
+.dr b{font-family:var(--display);font-weight:600}
+.dr small{display:block;color:var(--muted);font-size:12px}
+.bar{height:8px;border-radius:99px;background:var(--sunk);overflow:hidden;display:flex;margin-top:4px}
+.bar i{display:block;height:100%}
+.bar .bf{background:var(--accent)} .bar .bh{background:var(--half)}
+.bar .bmi{background:var(--mi)} .bar .bmz{background:var(--mz)}
+.dr .amt{font-weight:700;text-align:right;font-size:15px}
+.tot{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:14px 16px;border-radius:var(--r);background:var(--accent);color:var(--surface)}
+.tot span{font-weight:600}
+.tot b{font-family:var(--display);font-size:24px}
+.kul .tot{background:var(--hero);color:var(--hero-ink)} .kul .tot b{color:var(--half)}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sum>div{padding:12px 14px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface)}
+.sum small{display:block;color:var(--muted);font-size:13px}
+.sum b{font-family:var(--display);font-size:22px;font-weight:700}
+.sum .smi b{color:var(--mi)} .sum .smz b{color:var(--mz)}
+.sum .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.kr{grid-template-columns:44px 1fr auto}
+.kr small span{white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:0}
+
+/* bottom bar */
+.totalbar{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgb(16 24 40 / .08)}
+.totalbar>div{max-width:728px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.totalbar small{display:block;font-size:12px;color:var(--muted)}
+.totalbar b{font-family:var(--display);font-size:24px;font-weight:800}
+.sharebtn{border:0;background:var(--ink);color:var(--surface);border-radius:12px;padding:11px 14px;font-weight:700;font-size:14px;white-space:nowrap}
+
+/* sheets */
+.overlay{position:fixed;inset:0;z-index:10;background:rgb(10 14 22 / .5);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 16px calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:12px;max-height:88%;overflow:auto}
+.sheet h3{font-family:var(--display);font-size:20px;margin:0}
+.sheet input[type=text]{width:100%;font:inherit;font-size:18px;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:var(--sunk);color:var(--ink)}
+.sheet textarea{width:100%;min-height:280px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--sunk);color:var(--ink);resize:vertical}
+.sheet .row{display:flex;gap:8px}
+.btn{flex:1;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:11px 12px;font-weight:700;font-size:15px}
+.btn.primary{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.danger.sure{background:var(--danger);color:#fff}
+.sheet p{margin:0;color:var(--muted);font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 14px;border-radius:12px;font-size:14px;z-index:20;max-width:90%;text-align:center}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>
+html{background:var(--bg)}
+body{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+[hidden]{display:none!important}
+img{max-width:100%}
+.menubtn{border:0;background:rgb(255 255 255 / .08);color:var(--hero-ink);border-radius:10px;width:34px;height:30px;font-size:18px;line-height:1;margin-left:6px}
+.brand>div{display:flex;align-items:center}
+/* login */
+#login{min-height:calc(100vh - 140px);display:grid;align-content:center;gap:16px;max-width:420px;margin:0 auto;padding-block:24px}
+#login .hero{gap:10px;text-align:center;justify-items:center;padding:28px 20px}
+#login .hero img{width:76px;height:76px;border-radius:18px}
+#login .hero p{margin:0;color:var(--hero-muted);font-size:14px}
+.form{display:grid;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.form label{font-weight:700;font-size:14px}
+.form input{width:100%;font:inherit;font-size:17px;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--sunk);color:var(--ink)}
+.form .btn{flex:none;padding:13px}
+.err{color:var(--danger);font-size:14px;margin:0;min-height:1em}
+.linkbtn{border:0;background:none;color:var(--muted);text-decoration:underline;font-size:14px;padding:4px}
+.setup{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px}
+.setup h2{font-size:20px}
+.setup p{margin:0;color:var(--muted)}
+.btn.wa{background:#1fa855;color:#fff;border-color:#1fa855;text-align:center;text-decoration:none;display:block}
+.sheet .row.three{flex-wrap:wrap}
+.sheet .row.three .btn{min-width:30%}
+.who{font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div id="setup" hidden>
+  <div class="setup">
+    <h2>Setup baqi hai</h2>
+    <p>config.js mein Firebase ki values abhi nahi dali gayin. GitHub par config.js khol kar Firebase ki values paste karein, phir app dobara kholein.</p>
+  </div>
+</div>
+
+<div id="login" hidden>
+  <div class="hero">
+    <img src="icon-192.png" alt="">
+    <h1>Dihari <span>Khata</span></h1>
+    <p>Mistri aur mazdoor ki hafta-war dihari</p>
+  </div>
+  <form class="form" id="loginForm" novalidate>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" inputmode="email" required>
+    <label for="pass">Password</label>
+    <input id="pass" type="password" autocomplete="current-password" required>
+    <p class="err" id="loginErr"></p>
+    <button class="btn primary" type="submit" id="loginBtn">Login karein</button>
+    <button class="linkbtn" type="button" id="forgot">Password bhool gaye?</button>
+  </form>
+</div>
+
+<div id="app" hidden>
+<header class="hero">
+  <div class="brand">
+    <h1>Dihari <span>Khata</span></h1>
+    <div><span id="sync" class="chip">Jor raha hai…</span><button class="menubtn" id="menu" aria-label="Menu">⋯</button></div>
+  </div>
+  <div class="weeknav">
+    <button id="prev" aria-label="Pichla hafta">‹</button>
+    <div id="wlabel"></div>
+    <button id="next" aria-label="Agla hafta">›</button>
+  </div>
+  <div class="figs">
+    <div class="fig big"><small>Hafte ka kul</small><b id="f-kul">Rs 0</b></div>
+    <div class="fig"><small><i style="background:var(--mi)"></i>Mistri</small><b id="f-mi">Rs 0</b></div>
+    <div class="fig"><small><i style="background:var(--mz)"></i>Mazdoor</small><b id="f-mz">Rs 0</b></div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Tabs"><div role="tablist">
+  <button class="mi" data-tab="mi" role="tab">Mistri</button>
+  <button class="mz" data-tab="mz" role="tab">Mazdoor</button>
+  <button class="kul tabsel" data-tab="kul" role="tab">Kul hisaab</button>
+</div></nav>
+
+<main id="main"></main>
+
+<div class="totalbar"><div>
+  <div><small>Is hafte ka kul (Mistri + Mazdoor)</small><b id="grand">Rs 0</b></div>
+  <button id="share" class="sharebtn">Statement share</button>
+</div></div>
+</div>
+
+<div id="sheet" class="overlay" hidden><div class="sheet" id="sheetBody"></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+const T={mi:{name:'Mistri',label:'Mistri'},mz:{name:'Mazdoor',label:'Labour'}};
+const DAYS=['Sat','Sun','Mon','Tue','Wed','Thu'];
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DEF={rates:{mi:2400,mz:1300}};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rs=n=>'Rs '+Math.round(n).toLocaleString('en-IN');
+const dayTxt=n=>{const w=Math.floor(n),h=n-w>0;return (w||!h?w:'')+(h?'½':'')};
+const clone=o=>o==null?o:JSON.parse(JSON.stringify(o));
+function merge(a,b){for(const k in b){const v=b[k];if(v&&typeof v==='object'&&!Array.isArray(v)&&a[k]&&typeof a[k]==='object')merge(a[k],v);else a[k]=clone(v)}return a}
+function pref(k,d){try{const v=localStorage.getItem('dk-'+k);return v==null?d:JSON.parse(v)}catch(e){return d}}
+function setPref(k,v){try{localStorage.setItem('dk-'+k,JSON.stringify(v))}catch(e){}}
+function initials(s){const w=String(s).trim().split(/\s+/);if(w.length>1&&/^\d+$/.test(w[w.length-1]))return w[0][0].toUpperCase()+w[w.length-1];return (w[0][0]+(w[1]?w[1][0]:(w[0][1]||''))).toUpperCase()}
+
+function satOf(d){d=new Date(d.getFullYear(),d.getMonth(),d.getDate());d.setDate(d.getDate()-((d.getDay()+1)%7));return d}
+const p2=n=>String(n).padStart(2,'0');
+const keyOf=d=>d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());
+const fromKey=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d)};
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const short=d=>d.getDate()+' '+MON[d.getMonth()];
+let thisKey=keyOf(satOf(new Date()));
+let todayKey=keyOf(new Date());
+
+let cfgRaw={}, week={}, viewKey=thisKey;
+let tab=pref('tab','mi'); if(!['mi','mz','kul'].includes(tab))tab='mi';
+let more=pref('more',{mi:false,mz:false});
+let ready=false, online=navigator.onLine, pendingRender=false, store=null, userEmail='';
+
+// ---------- data reads ----------
+const rateCfg=t=>Number(cfgRaw.rates&&cfgRaw.rates[t])||DEF.rates[t];
+const rateOf=t=>Number(week.rates&&week.rates[t])||rateCfg(t);
+const val=(t,n,d)=>{const a=week.att&&week.att[t+'-'+n];return a?(Number(a[d])||0):0};
+const countOf=t=>Math.max(10,Number(cfgRaw.count&&cfgRaw.count[t])||10);
+function maxId(t){let m=countOf(t);const att=week.att||{};for(const k in att){if(!k.startsWith(t+'-')||!att[k])continue;const n=parseInt(k.slice(3));if(n>m&&Object.values(att[k]).some(v=>Number(v)>0))m=n}return m}
+const ids=t=>Array.from({length:maxId(t)},(_,i)=>i+1);
+const nameOf=(t,n)=>(cfgRaw.names&&cfgRaw.names[t]&&cfgRaw.names[t][n])||(T[t].label+' '+n);
+const isVisible=(t,n)=>n<=6||n>10||more[t];
+function entry(t,n){let days=0;const half=[];for(let d=0;d<6;d++){const v=val(t,n,d);days+=v;if(v===0.5)half.push(DAYS[d])}return{days,half,amt:days*rateOf(t)}}
+function dayStat(t,d){let f=0,h=0;for(const n of ids(t)){const v=val(t,n,d);if(v===1)f++;else if(v===0.5)h++}return{f,h,amt:(f+h/2)*rateOf(t)}}
+const tabTotal=t=>ids(t).reduce((s,n)=>s+entry(t,n).amt,0);
+
+// ---------- Firestore store ----------
+function fsStore(fs){
+  const q={},known={};
+  const run=(k,fn)=>(q[k]=(q[k]||Promise.resolve()).then(fn,fn));
+  async function write(ref,k,p,base){
+    if(!known[k]){
+      let exists=false;
+      try{exists=(await ref.get()).exists}catch(e){exists=false}
+      if(!exists){await ref.set(merge(clone(base),p),{merge:true});known[k]=true;return}
+      known[k]=true;
+    }
+    await ref.set(p,{merge:true});
+  }
+  const cfgRef=fs.doc('khata/config');
+  const wref=k=>fs.doc('weeks/'+k);
+  return{
+    watchCfg(cb){return cfgRef.onSnapshot(s=>{if(s.exists)known.cfg=true;cb(s.exists?clone(s.data()):{})},snapErr)},
+    watchWeek(k,cb){return wref(k).onSnapshot(s=>{if(s.exists)known['w'+k]=true;cb(s.exists?clone(s.data()):{})},snapErr)},
+    writeCfg(p){return run('cfg',()=>write(cfgRef,'cfg',p,{}))},
+    writeWeek(k,p,base){return run('w'+k,()=>write(wref(k),'w'+k,p,base))}
+  };
+}
+function snapErr(e){
+  if(e&&e.code==='permission-denied')toast('Is email ko khata dekhne ki ijazat nahi. Firebase rules check karein.');
+  else toast('Data load nahi hua. Internet check karein.');
+}
+function writeErr(e){
+  if(e&&e.code==='permission-denied')toast('Save nahi hua: is email ko ijazat nahi.');
+  else toast('Save nahi hua. Dobara dabayein.');
+}
+
+let unWeek=()=>{},unCfg=()=>{};
+function subscribeWeek(){unWeek();week={};render();unWeek=store.watchWeek(viewKey,d=>{week=d;render()})}
+
+function saveWeek(patch){
+  if(!ready)return;
+  week=merge(week||{},clone(patch));render();
+  const base={rates:{mi:rateOf('mi'),mz:rateOf('mz')},att:{}};
+  Promise.resolve(store.writeWeek(viewKey,patch,base)).catch(writeErr);
+}
+function saveCfg(patch){
+  if(!ready)return;
+  cfgRaw=merge(cfgRaw||{},clone(patch));render();
+  Promise.resolve(store.writeCfg(patch)).catch(writeErr);
+}
+
+// ---------- render ----------
+function render(){
+  if(!ready)return;
+  const a=document.activeElement;
+  if(a&&a.classList&&a.classList.contains('rateinp')){pendingRender=true;return}
+  pendingRender=false;
+  const s=fromKey(viewKey),e=addDays(s,5);
+  const rel=viewKey===thisKey?'Is hafta':viewKey<thisKey?'Pichla hafta':'Agla hafta';
+  $('#wlabel').innerHTML=esc('Sat '+short(s)+' – Thu '+short(e))+'<small>'+rel+' · '+e.getFullYear()+(viewKey!==thisKey?' · <button id="today">Is hafte par jayein</button>':'')+'</small>';
+  const mi=tabTotal('mi'),mz=tabTotal('mz');
+  $('#f-mi').textContent=rs(mi);$('#f-mz').textContent=rs(mz);$('#f-kul').textContent=rs(mi+mz);$('#grand').textContent=rs(mi+mz);
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  const chip=$('#sync');
+  chip.textContent=online?'Live sync':'Offline · baad mein sync';
+  chip.className='chip'+(online?' live':'');
+  const m=$('#main');m.className=tab;
+  m.innerHTML=tab==='kul'?kulHTML():tabHTML(tab);
+}
+
+function tabHTML(t){
+  const r=rateOf(t);
+  const past=viewKey<thisKey;
+  const vis=ids(t).filter(n=>isVisible(t,n));
+  let h='<section class="card ratebox"><div><label for="rate-'+t+'">Poori dihari</label><p class="hint">Aadhi: '+rs(r/2)+(past?' · sirf is hafte par':' · is hafte aur aage')+'</p></div>'
+   +'<div class="rate"><span>Rs</span><input class="rateinp" id="rate-'+t+'" data-t="'+t+'" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" autocomplete="off" value="'+r+'"></div></section>';
+  h+='<section class="card gridcard"><div class="gridhead"><h2>Hazri</h2><div class="legend"><span><i class="sw f"></i>Poori</span><span><i class="sw h"></i>Aadhi</span><span><i class="sw e"></i>Chhutti</span></div></div>';
+  h+='<div class="tablewrap"><table class="grid"><thead><tr><th class="daycol"></th>';
+  for(const n of vis){const nm=nameOf(t,n);h+='<th><button class="nm" data-act="name" data-t="'+t+'" data-n="'+n+'" aria-label="Naam badlein: '+esc(nm)+'"><i class="av">'+esc(initials(nm))+'</i><span>'+esc(nm)+'</span></button></th>'}
+  h+='</tr></thead><tbody>';
+  const s=fromKey(viewKey);
+  for(let d=0;d<6;d++){
+    const dt=addDays(s,d);
+    h+='<tr'+(keyOf(dt)===todayKey?' class="today"':'')+'><th class="daycol" scope="row"><b>'+DAYS[d]+'</b><small>'+short(dt)+'</small></th>';
+    for(const n of vis){const v=val(t,n,d);
+      h+='<td><div class="cw"><button class="cell'+(v===1?' f':v===0.5?' h':'')+'" data-act="tap" data-t="'+t+'" data-n="'+n+'" data-d="'+d+'" aria-label="'+esc(nameOf(t,n))+' '+DAYS[d]+': '+(v===1?'poori':v===0.5?'aadhi':'chhutti')+'">'+(v===1?'✓':v===0.5?'½':'')+'</button>'
+        +'<button class="half'+(v===0.5?' on':'')+'" data-act="half" data-t="'+t+'" data-n="'+n+'" data-d="'+d+'" aria-label="Aadhi dihari" aria-pressed="'+(v===0.5)+'">½</button></div></td>'}
+    h+='</tr>';
+  }
+  h+='</tbody><tfoot><tr><td class="daycol">Din</td>';
+  for(const n of vis)h+='<td><b>'+dayTxt(entry(t,n).days)+'</b></td>';
+  h+='</tr><tr><td class="daycol">Raqam</td>';
+  for(const n of vis){const a=entry(t,n).amt;h+='<td><b>'+(a?Math.round(a).toLocaleString('en-IN'):'–')+'</b></td>'}
+  h+='</tr></tfoot></table></div></section>';
+  let hd=0,ha=0;for(let n=7;n<=10;n++){const e=entry(t,n);hd+=e.days;ha+=e.amt}
+  h+='<div class="card morebar"><div><b>Baqi 4 entries (7–10)</b><small>'+(more[t]?'Upar table mein khuli hain':'Chhupi hui hain')+(hd?' · '+dayTxt(hd)+' din · '+rs(ha)+' (hisaab mein shamil)':'')+'</small></div>'
+   +'<label class="switch"><input type="checkbox" id="more-'+t+'" data-act="more" data-t="'+t+'"'+(more[t]?' checked':'')+' aria-label="Baqi entries dikhayein"><span></span></label></div>';
+  h+='<button class="add" data-act="add" data-t="'+t+'">+ Mazeed add karein</button>';
+  const stats=DAYS.map((_,d)=>dayStat(t,d));
+  const maxAmt=Math.max(1,...stats.map(x=>x.amt));
+  h+='<section class="card daily"><h2>Rozana hisaab</h2>';
+  stats.forEach((x,d)=>{
+    const fw=(x.f*rateOf(t))/maxAmt*100,hw=(x.h*rateOf(t)/2)/maxAmt*100;
+    h+='<div class="dr"><b>'+DAYS[d]+'</b><div><small>'+(x.f||x.h?x.f+' poori'+(x.h?' · '+x.h+' aadhi':''):'Koi hazri nahi')+'</small><div class="bar"><i class="bf" style="width:'+fw+'%"></i><i class="bh" style="width:'+hw+'%"></i></div></div><span class="amt">'+rs(x.amt)+'</span></div>'});
+  h+='</section><div class="tot"><span>'+T[t].name+' ka hafte ka kul</span><b>'+rs(tabTotal(t))+'</b></div>';
+  return h;
+}
+
+function kulHTML(){
+  const mi=tabTotal('mi'),mz=tabTotal('mz');
+  const cnt=t=>ids(t).reduce((s,n)=>s+entry(t,n).days,0);
+  let h='<div class="sum"><div class="smi"><small>Mistri</small><b>'+rs(mi)+'</b><div class="meta">'+dayTxt(cnt('mi'))+' dihariyan × '+rs(rateOf('mi'))+'</div></div><div class="smz"><small>Mazdoor</small><b>'+rs(mz)+'</b><div class="meta">'+dayTxt(cnt('mz'))+' dihariyan × '+rs(rateOf('mz'))+'</div></div></div>';
+  const rows=DAYS.map((_,d)=>({a:dayStat('mi',d).amt,b:dayStat('mz',d).amt}));
+  const mx=Math.max(1,...rows.map(r=>r.a+r.b));
+  h+='<section class="card daily"><h2>Rozana hisaab</h2>';
+  rows.forEach((r,d)=>{
+    h+='<div class="dr kr"><b>'+DAYS[d]+'</b><div><small><span><i class="dot" style="background:var(--mi)"></i>'+rs(r.a)+'</span> &nbsp; <span><i class="dot" style="background:var(--mz)"></i>'+rs(r.b)+'</span></small><div class="bar"><i class="bmi" style="width:'+(r.a/mx*100)+'%"></i><i class="bmz" style="width:'+(r.b/mx*100)+'%"></i></div></div><span class="amt">'+rs(r.a+r.b)+'</span></div>'});
+  h+='</section><div class="tot"><span>Hafte ka kul (Mistri + Mazdoor)</span><b>'+rs(mi+mz)+'</b></div>';
+  return h;
+}
+
+// ---------- statement ----------
+function statement(){
+  const s=fromKey(viewKey),e=addDays(s,5);
+  const L=['*Dihari Statement*','Hafta: Sat '+short(s)+' – Thu '+short(e)+' '+e.getFullYear(),''];
+  for(const t of ['mi','mz']){
+    L.push('*'+T[t].name.toUpperCase()+'* (poori dihari '+rs(rateOf(t))+')');
+    let any=false;
+    for(const n of ids(t)){const x=entry(t,n);if(!x.days)continue;any=true;
+      L.push('• '+nameOf(t,n)+': '+dayTxt(x.days)+' din = '+rs(x.amt)+(x.half.length?' (aadhi: '+x.half.join(', ')+')':''))}
+    if(!any)L.push('• Koi hazri nahi');
+    L.push(T[t].name+' ka kul: *'+rs(tabTotal(t))+'*','');
+  }
+  L.push('*Rozana hisaab*');
+  for(let d=0;d<6;d++){const a=dayStat('mi',d).amt,b=dayStat('mz',d).amt;if(a+b)L.push(DAYS[d]+' '+short(addDays(s,d))+': Mistri '+rs(a)+' + Mazdoor '+rs(b)+' = '+rs(a+b))}
+  L.push('','*Hafte ka kul (Mistri + Mazdoor): '+rs(tabTotal('mi')+tabTotal('mz'))+'*');
+  return L.join('\n');
+}
+
+// ---------- sheets ----------
+function openSheet(html){$('#sheetBody').innerHTML=html;$('#sheet').hidden=false}
+function closeSheet(){$('#sheet').hidden=true;$('#sheetBody').innerHTML='';if(pendingRender)render()}
+let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+
+function nameSheet(t,n){
+  const removable=n>10&&n===maxId(t)&&n===countOf(t);
+  openSheet('<h3>'+T[t].name+' '+n+' ka naam</h3><input type="text" id="nmInput" maxlength="30" autocomplete="off" value="'+esc((cfgRaw.names&&cfgRaw.names[t]&&cfgRaw.names[t][n])||'')+'" placeholder="'+esc(T[t].label+' '+n)+'">'
+   +'<p>Khali chhor dein to "'+esc(T[t].label+' '+n)+'" likha aaye ga.</p>'
+   +'<div class="row"><button class="btn" data-act="close">Band karein</button><button class="btn primary" data-act="saveName" data-t="'+t+'" data-n="'+n+'">Save</button></div>'
+   +(removable?'<button class="btn danger" data-act="remove" data-t="'+t+'" data-n="'+n+'">Ye entry hata dein</button>':''));
+  const i=$('#nmInput');i.focus();i.select();
+  i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('[data-act="saveName"]').click()}});
+}
+function statementSheet(){
+  const txt=statement();
+  openSheet('<h3>Hafte ki statement</h3><textarea id="stmt" readonly>'+esc(txt)+'</textarea>'
+   +'<div class="row three">'+(navigator.share?'<button class="btn primary" data-act="nshare">Share</button>':'')
+   +'<a class="btn wa" href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener">WhatsApp</a>'
+   +'<button class="btn" data-act="copy">Copy</button></div><button class="btn" data-act="close">Band karein</button>');
+}
+function menuSheet(){
+  openSheet('<h3>Menu</h3><p class="who">Login: '+esc(userEmail)+'</p>'
+   +'<button class="btn" data-act="reload">App refresh karein</button>'
+   +'<button class="btn danger" data-act="logout">Logout</button>'
+   +'<button class="btn" data-act="close">Band karein</button>');
+}
+
+// ---------- events ----------
+document.addEventListener('click',ev=>{
+  if(ev.target.id==='sheet'){closeSheet();return}
+  if(ev.target.id==='today'){viewKey=thisKey;subscribeWeek();return}
+  const b=ev.target.closest('[data-act],[data-tab]');
+  if(!b)return;
+  if(b.dataset.tab){tab=b.dataset.tab;setPref('tab',tab);render();return}
+  const {act,t}=b.dataset,n=+b.dataset.n,d=+b.dataset.d;
+  if(act==='tap'){const v=val(t,n,d);saveWeek({att:{[t+'-'+n]:{[d]:v>0?0:1}}})}
+  else if(act==='half'){const v=val(t,n,d);saveWeek({att:{[t+'-'+n]:{[d]:v===0.5?1:0.5}}})}
+  else if(act==='add'){const nn=maxId(t)+1;saveCfg({count:{[t]:nn}});toast(T[t].label+' '+nn+' add ho gaya')}
+  else if(act==='name')nameSheet(t,n);
+  else if(act==='saveName'){const v=$('#nmInput').value.trim().slice(0,30);saveCfg({names:{[t]:{[n]:v||null}}});closeSheet()}
+  else if(act==='remove'){
+    if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Pakka hatana hai? Is hafte ki hazri bhi mit jaye gi';return}
+    saveCfg({count:{[t]:n-1}});
+    if(week.att&&week.att[t+'-'+n])saveWeek({att:{[t+'-'+n]:null}});
+    closeSheet();toast('Entry hata di');
+  }
+  else if(act==='close')closeSheet();
+  else if(act==='nshare'){navigator.share({title:'Dihari Statement',text:$('#stmt').value}).catch(()=>{})}
+  else if(act==='copy'){
+    const ta=$('#stmt');
+    const fall=()=>{ta.focus();ta.select();try{document.execCommand('copy');toast('Statement copy ho gayi')}catch(e){toast('Text select ho gaya, ab Copy dabayein')}};
+    try{navigator.clipboard.writeText(ta.value).then(()=>toast('Statement copy ho gayi'),fall)}catch(e){fall()}
+  }
+  else if(act==='reload'){location.reload()}
+  else if(act==='logout'){closeSheet();firebase.auth().signOut()}
+});
+document.addEventListener('change',ev=>{
+  const i=ev.target;if(i.dataset&&i.dataset.act==='more'){more[i.dataset.t]=i.checked;setPref('more',more);render()}
+});
+document.addEventListener('focusin',ev=>{const i=ev.target;if(i.classList.contains('rateinp')){i.select();setTimeout(()=>{try{i.setSelectionRange(0,i.value.length)}catch(e){}},0)}});
+document.addEventListener('input',ev=>{const i=ev.target;if(i.classList.contains('rateinp')){const c=i.value.replace(/\D/g,'').slice(0,6);if(c!==i.value)i.value=c}});
+document.addEventListener('keydown',ev=>{const i=ev.target;if(i.classList&&i.classList.contains('rateinp')&&ev.key==='Enter'){ev.preventDefault();i.blur()}});
+document.addEventListener('focusout',ev=>{
+  const i=ev.target;if(!i.classList.contains('rateinp'))return;
+  const t=i.dataset.t,v=parseInt(i.value,10);
+  setTimeout(()=>{
+    if(v>0&&v!==rateOf(t)){
+      if(viewKey<thisKey){saveWeek({rates:{[t]:v}})}
+      else{saveCfg({rates:{[t]:v}});saveWeek({rates:{[t]:v}})}
+      toast(T[t].name+' ki dihari '+rs(v)+' ho gayi');
+    }else render();
+  },0);
+});
+$('#prev').onclick=()=>{viewKey=keyOf(addDays(fromKey(viewKey),-7));subscribeWeek()};
+$('#next').onclick=()=>{viewKey=keyOf(addDays(fromKey(viewKey),7));subscribeWeek()};
+$('#share').onclick=statementSheet;
+$('#menu').onclick=menuSheet;
+window.addEventListener('online',()=>{online=true;render()});
+window.addEventListener('offline',()=>{online=false;render()});
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden||!ready)return;
+  const nk=keyOf(satOf(new Date()));todayKey=keyOf(new Date());
+  if(nk!==thisKey){const wasCurrent=viewKey===thisKey;thisKey=nk;if(wasCurrent){viewKey=thisKey;subscribeWeek();return}}
+  render();
+});
+
+// ---------- boot ----------
+function show(id){['setup','login','app'].forEach(x=>$('#'+x).hidden=x!==id)}
+const C=window.FIREBASE_CONFIG||{};
+const allowed=(window.ALLOWED_EMAILS||[]).map(e=>String(e).trim().toLowerCase());
+if(!C.apiKey||/PASTE/.test(C.apiKey)||typeof firebase==='undefined'){show('setup')}
+else{
+  firebase.initializeApp(C);
+  const fs=firebase.firestore();
+  try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+  const auth=firebase.auth();
+  const errMsg=c=>({
+    'auth/invalid-credential':'Email ya password ghalat hai.',
+    'auth/wrong-password':'Password ghalat hai.',
+    'auth/user-not-found':'Ye email register nahi hai.',
+    'auth/invalid-email':'Email theek likhein.',
+    'auth/too-many-requests':'Bohat dafa koshish ho gayi. Thori der baad try karein.',
+    'auth/network-request-failed':'Internet nahi chal raha.'
+  }[c]||'Login nahi hua ('+c+').');
+  $('#loginForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const em=$('#email').value.trim(),pw=$('#pass').value;
+    $('#loginErr').textContent='';
+    if(!em||!pw){$('#loginErr').textContent='Email aur password dono likhein.';return}
+    $('#loginBtn').disabled=true;$('#loginBtn').textContent='Login ho raha hai…';
+    try{await auth.signInWithEmailAndPassword(em,pw)}catch(x){$('#loginErr').textContent=errMsg(x.code)}
+    $('#loginBtn').disabled=false;$('#loginBtn').textContent='Login karein';
+  });
+  $('#forgot').onclick=async()=>{
+    const em=$('#email').value.trim();
+    if(!em){$('#loginErr').textContent='Pehle upar apna email likhein, phir dobara dabayein.';return}
+    try{await auth.sendPasswordResetEmail(em);$('#loginErr').textContent='Password badalne ka link '+em+' par bhej diya hai.'}
+    catch(x){$('#loginErr').textContent=errMsg(x.code)}
+  };
+  auth.onAuthStateChanged(u=>{
+    unWeek();unCfg();unWeek=()=>{};unCfg=()=>{};ready=false;
+    if(!u){show('login');return}
+    userEmail=(u.email||'').toLowerCase();
+    if(allowed.length&&!allowed.includes(userEmail)){
+      $('#loginErr').textContent='Is email ('+userEmail+') ko ijazat nahi.';auth.signOut();return;
+    }
+    show('app');
+    store=fsStore(fs);ready=true;cfgRaw={};
+    unCfg=store.watchCfg(c=>{cfgRaw=c||{};render()});
+    subscribeWeek();
+  });
+}
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+})();
+</script>
+</body>
+</html>
