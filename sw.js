@@ -1,5 +1,5 @@
 // Dihari Khata service worker: app files from network first (so updates show), cache as fallback for offline.
-const CACHE = 'dihari-khata-v1';
+const CACHE = 'dihari-khata-v2';
 const SHELL = ['./', './index.html', './config.js', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './favicon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
